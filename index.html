@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0f14">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<title>Gym Progress</title>
+<style>
+:root{--bg:#0b0f14;--p:#121923;--p2:#17202c;--t:#f5f7fa;--m:#98a6b6;--a:#e2ab50;--g:#55d68b;--l:#263142}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(#080c11,#0d141d 45%,#0b0f14);color:var(--t);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;min-height:100vh}
+main{width:min(980px,100%);margin:auto;padding:16px 14px 92px}.hero,.card,.exercise{background:var(--p);border:1px solid var(--l);border-radius:20px}
+.hero{padding:20px;background:linear-gradient(135deg,#111923,#202a37)}h1{margin:0;font-size:34px}.accent{color:var(--a)}.muted{color:var(--m)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}.stat{padding:14px;background:var(--p);border:1px solid var(--l);border-radius:15px}.stat b{font-size:22px;display:block}.stat span{font-size:12px;color:var(--m)}
+nav{display:flex;gap:8px;overflow:auto;position:sticky;top:0;z-index:5;padding:10px 0;background:#0b0f14ee;backdrop-filter:blur(10px)}button,.btn,select,input,textarea{font:inherit}
+button,.btn{border:1px solid var(--l);background:var(--p2);color:var(--t);padding:10px 13px;border-radius:12px;font-weight:700}.active,.primary{background:var(--a);color:#17120a;border-color:var(--a)}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0}.date{margin-left:auto;background:var(--p);color:var(--t);border:1px solid var(--l);padding:9px;border-radius:12px}
+.exercise{overflow:hidden;margin:10px 0}.eh{display:flex;justify-content:space-between;gap:8px;padding:14px 14px 8px}.eh h3{margin:0}.target{color:var(--a);font-size:12px;font-weight:800}.last{padding:0 14px 10px;color:var(--m);font-size:12px}
+.visual{display:grid;grid-template-columns:1fr 28px 1fr;gap:7px;align-items:center;padding:0 12px 12px}.visual img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:14px;border:1px solid var(--l);background:#0b1118}.arrow{text-align:center;color:var(--a);font-size:24px;font-weight:900}
+.set{display:grid;grid-template-columns:38px 1fr 1fr 44px;gap:8px;padding:8px 12px;border-top:1px solid var(--l);align-items:center}.box{display:flex;align-items:center;background:#0c121a;border:1px solid var(--l);border-radius:10px;padding:0 7px}.box input{width:100%;padding:11px 3px;background:transparent;border:0;color:var(--t);outline:0}.box span{font-size:11px;color:var(--m)}.check{width:42px;height:42px;padding:0}.done{background:#143e2a;color:var(--g);border-color:#2d6e4c}
+.notes{padding:8px 12px 14px}.notes textarea{width:100%;min-height:50px;background:#0c121a;color:var(--t);border:1px solid var(--l);border-radius:10px;padding:9px}
+.section{display:none}.section.show{display:block}.card{padding:14px;margin:10px 0}.history{padding:12px 0;border-bottom:1px solid var(--l)}.history:last-child{border:0}
+footer{position:fixed;bottom:0;left:0;right:0;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:#0b0f14f2;border-top:1px solid var(--l)}footer>div{width:min(980px,100%);margin:auto;display:flex;gap:8px}footer button{flex:1}
+svg{width:100%;height:190px;background:#0c121a;border:1px solid var(--l);border-radius:12px}
+@media(max-width:620px){.stats{grid-template-columns:repeat(2,1fr)}.date{width:100%;margin-left:0}.visual{grid-template-columns:1fr 20px 1fr}.set{grid-template-columns:30px 1fr 1fr 42px;padding:8px}}
+</style>
+</head>
+<body>
+<main>
+<section class="hero"><h1>Gym <span class="accent">Progress</span></h1><p class="muted">3 φορές / εβδομάδα • Full Body • κιλά, επαναλήψεις, ιστορικό και πρόοδος.</p></section>
+<div class="stats"><div class="stat"><b id="week">0</b><span>Αυτή την εβδομάδα</span></div><div class="stat"><b id="total">0</b><span>Συνολικά sessions</span></div><div class="stat"><b id="volume">0</b><span>Συνολικό volume kg</span></div></div>
+
+<nav>
+<button class="tab active" data-tab="workout">Προπόνηση</button>
+<button class="tab" data-tab="history">Ιστορικό</button>
+<button class="tab" data-tab="progress">Πρόοδος</button>
+</nav>
+
+<section id="workout" class="section show">
+<div class="toolbar">
+<button class="day active" data-day="A">Ημέρα A</button><button class="day" data-day="B">Ημέρα B</button><button class="day" data-day="C">Ημέρα C</button>
+<input class="date" id="date" type="date">
+</div>
+<div class="toolbar"><button id="loadLast">Φόρτωσε προηγούμενα</button><span class="muted" id="subtitle"></span></div>
+<div id="list"></div>
+</section>
+
+<section id="history" class="section"><div class="card"><h2>Ιστορικό</h2><div id="historyList"></div></div></section>
+
+<section id="progress" class="section">
+<div class="card"><h2>Πρόοδος</h2><select id="exerciseSelect" class="date" style="width:100%;margin:0 0 10px"></select><svg id="chart" viewBox="0 0 900 190" preserveAspectRatio="none"></svg><p class="muted" id="progText"></p></div>
+</section>
+</main>
+
+<footer><div><button id="clear">Καθαρισμός</button><button id="save" class="primary">Αποθήκευση προπόνησης</button></div></footer>
+
+<script>
+const P={
+A:{s:"Δύναμη • βασικές κινήσεις",e:[["Leg Press ή Squat","3×6–10",3,"leg-press"],["Bench Press","3×6–10",3,"bench-press"],["Lat Pulldown","3×8–12",3,"lat-pulldown"],["Leg Curl","3×10–15",3,"leg-curl"],["Lateral Raises","3×12–15",3,"lateral-raise"],["Biceps Curl","2×10–15",2,"bicep-curl"],["Triceps Pushdown","2×10–15",2,"tricep-pushdown"]]},
+B:{s:"Όγκος • ισορροπία",e:[["Hack Squat ή Leg Press","3×8–12",3,"hack-squat"],["Incline Dumbbell Press","3×8–12",3,"incline-db-press"],["Seated Cable Row","3×8–12",3,"seated-cable-row"],["Leg Press (πόδια ψηλά)","3×10–15",3,"leg-press"],["Shoulder Press","2–3×8–12",3,"machine-shoulder-press"],["Biceps Curl","2×10–15",2,"bicep-curl"],["Triceps Extension","2×10–15",2,"overhead-tricep-extension"]]},
+C:{s:"Σταθερότητα • πρόοδος",e:[["Leg Press ή Squat","3×8–12",3,"leg-press"],["Chest Press ή Dumbbell Bench","3×8–12",3,"chest-press-machine"],["Pull-ups ή Lat Pulldown","3×8–12",3,"pull-up"],["Leg Curl","3×10–15",3,"leg-curl"],["Lateral Raises","3×12–20",3,"lateral-raise"],["Biceps Curl","2×10–15",2,"bicep-curl"],["Triceps Pushdown","2×10–15",2,"tricep-pushdown"]]}
+};
+let day="A",sessions=JSON.parse(localStorage.getItem("gymSessionsV2")||"[]");
+const q=s=>document.querySelector(s),qa=s=>[...document.querySelectorAll(s)];
+q("#date").value=new Date().toISOString().slice(0,10);
+const img=(slug,phase)=>"https://exercise-dataset.com/images/flat/"+slug+"-"+phase+".webp";
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
+function lastEx(name){for(const s of [...sessions].sort((a,b)=>b.date.localeCompare(a.date))){const e=s.exercises.find(x=>x.name===name);if(e)return e}return null}
+function render(){
+ q("#subtitle").textContent=P[day].s;
+ q("#list").innerHTML=P[day].e.map((e,i)=>{const [name,target,n,slug]=e,L=lastEx(name);return `
+ <article class="exercise" data-i="${i}">
+ <div class="eh"><h3>${esc(name)}</h3><span class="target">${target}</span></div>
+ <div class="last">${L?"Προηγούμενο: "+L.sets.map(x=>`${x.weight}kg×${x.reps}`).join(" · "):"Δεν υπάρχει προηγούμενη καταγραφή"}</div>
+ <div class="visual"><img src="${img(slug,"start")}" alt=""><div class="arrow">→</div><img src="${img(slug,"peak")}" alt=""></div>
+ ${Array.from({length:n},(_,j)=>`<div class="set"><b>S${j+1}</b><div class="box"><input class="w" type="number" min="0" step=".5" placeholder="0"><span>kg</span></div><div class="box"><input class="r" type="number" min="0" step="1" placeholder="0"><span>reps</span></div><button class="check">✓</button></div>`).join("")}
+ <div class="notes"><textarea placeholder="Σημείωση..."></textarea></div></article>`}).join("");
+ qa(".check").forEach(b=>b.onclick=()=>b.classList.toggle("done"));
+}
+function collect(){return {id:Date.now(),date:q("#date").value,day,exercises:qa(".exercise").map((c,i)=>({name:P[day].e[i][0],sets:qaFrom(c,".set").map(r=>({weight:+r.querySelector(".w").value||0,reps:+r.querySelector(".r").value||0,done:r.querySelector(".check").classList.contains("done")})),note:c.querySelector("textarea").value.trim()}))}}
+function qaFrom(el,s){return [...el.querySelectorAll(s)]}
+function save(){
+ const s=collect(); if(!s.exercises.some(e=>e.sets.some(x=>x.weight||x.reps||x.done)||e.note)){alert("Βάλε τουλάχιστον μία καταγραφή.");return}
+ sessions.push(s);localStorage.setItem("gymSessionsV2",JSON.stringify(sessions));render();renderAll();alert("Αποθηκεύτηκε ✓");
+}
+function loadLast(){const p=[...sessions].filter(x=>x.day===day).sort((a,b)=>b.date.localeCompare(a.date))[0];if(!p){alert("Δεν υπάρχει προηγούμενη προπόνηση.");return}
+ qa(".exercise").forEach((c,i)=>qaFrom(c,".set").forEach((r,j)=>{const x=p.exercises[i]?.sets[j];if(x){r.querySelector(".w").value=x.weight||"";r.querySelector(".r").value=x.reps||""}}))}
+function hist(){
+ const b=q("#historyList"); if(!sessions.length){b.innerHTML='<p class="muted">Δεν υπάρχουν προπονήσεις ακόμη.</p>';return}
+ b.innerHTML=[...sessions].sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id).map(s=>{let v=0;s.exercises.forEach(e=>e.sets.forEach(x=>v+=x.weight*x.reps));return `<div class="history"><b>${s.date} • Ημέρα ${s.day}</b><div class="muted">${Math.round(v).toLocaleString("el-GR")} kg volume</div><details><summary>Λεπτομέρειες</summary>${s.exercises.map(e=>`<div>${esc(e.name)}: ${e.sets.map(x=>`${x.weight}×${x.reps}`).join(" · ")}</div>`).join("")}</details></div>`}).join("")
+}
+function stats(){q("#total").textContent=sessions.length;let v=0;sessions.forEach(s=>s.exercises.forEach(e=>e.sets.forEach(x=>v+=x.weight*x.reps)));q("#volume").textContent=Math.round(v).toLocaleString("el-GR");
+ const n=new Date(),d=(n.getDay()+6)%7,m=new Date(n);m.setHours(0,0,0,0);m.setDate(n.getDate()-d);q("#week").textContent=sessions.filter(s=>new Date(s.date+"T12:00:00")>=m).length}
+function names(){return [...new Set(Object.values(P).flatMap(x=>x.e.map(e=>e[0])))].sort()}
+function progress(){
+ const sel=q("#exerciseSelect"),old=sel.value;sel.innerHTML=names().map(n=>`<option>${esc(n)}</option>`).join("");if(names().includes(old))sel.value=old;draw()
+}
+function draw(){
+ const name=q("#exerciseSelect").value,pts=[...sessions].sort((a,b)=>a.date.localeCompare(b.date)).map(s=>{const e=s.exercises.find(x=>x.name===name);if(!e)return null;const val=Math.max(...e.sets.map(x=>x.weight||0));return val?{d:s.date,v:val}:null}).filter(Boolean),svg=q("#chart");
+ if(!pts.length){svg.innerHTML='<text x="50%" y="50%" fill="#98a6b6" text-anchor="middle">Δεν υπάρχουν δεδομένα</text>';q("#progText").textContent="";return}
+ const W=900,H=190,p=28,vals=pts.map(x=>x.v),mn=Math.min(...vals),mx=Math.max(...vals),sp=Math.max(1,mx-mn),cs=pts.map((x,i)=>[pts.length===1?W/2:p+i*(W-2*p)/(pts.length-1),H-p-(x.v-mn)/sp*(H-2*p),x]),poly=cs.map(c=>c[0]+","+c[1]).join(" ");
+ svg.innerHTML=`<polyline points="${poly}" fill="none" stroke="#e2ab50" stroke-width="4"/>${cs.map(c=>`<circle cx="${c[0]}" cy="${c[1]}" r="5" fill="#e2ab50"/>`).join("")}`;
+ q("#progText").textContent=`Πρώτη: ${pts[0].v} kg • Τελευταία: ${pts.at(-1).v} kg • Μεταβολή: ${(pts.at(-1).v-pts[0].v)>=0?"+":""}${(pts.at(-1).v-pts[0].v).toFixed(1)} kg`
+}
+function renderAll(){stats();hist();progress()}
+qa(".day").forEach(b=>b.onclick=()=>{day=b.dataset.day;qa(".day").forEach(x=>x.classList.remove("active"));b.classList.add("active");render()});
+qa(".tab").forEach(b=>b.onclick=()=>{qa(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");qa(".section").forEach(x=>x.classList.remove("show"));q("#"+b.dataset.tab).classList.add("show");document.querySelector("footer").style.display=b.dataset.tab==="workout"?"block":"none";if(b.dataset.tab==="progress")draw()});
+q("#save").onclick=save;q("#clear").onclick=render;q("#loadLast").onclick=loadLast;q("#exerciseSelect").onchange=draw;
+render();renderAll();
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js"));
+</script>
+</body></html>
